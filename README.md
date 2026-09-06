@@ -141,6 +141,46 @@ python skills/miloai-tease/tools/image_describer/describe_images.py --help
 
 Some tools have additional runtime or dependency requirements. For example, `image_describer` expects a compatible local model endpoint as described in its own README, `rich_text` uses Node packages, and `video_to_eos` depends on the bundled Python media stack. Treat `capture_frontend` as a maintainer utility rather than a normal authoring command because it mirrors assets from the live Milovana site.
 
+## Recommended Workflow: Let AI Build It With You
+
+Vibe MiloTease is designed to work best with a capable AI agent that can read and modify local project files and run commands. You provide the ideas, materials, and feedback; the AI handles the project structure and technical implementation.
+
+Start by asking the AI to load:
+
+```text
+skills/miloai-tease/SKILL.md
+```
+
+Then clearly tell it which project to create or modify. For an existing project, provide the exact project ID or project path instead of asking the AI to guess.
+
+After that, describe what you want in normal language. You can provide story ideas, finished text, images, an overall structure, gameplay ideas, branching requirements, or changes you want to make to existing content. The AI can follow the Skill to work with the Outline, Milo IR, media references, Build, validation, and other project details.
+
+You can also ask the AI to help search for and organize images using the included media tools. However, automatic image search depends heavily on the available sources and search results, and the quality can be inconsistent. If you have a clear visual requirement, it is usually better to provide your own selected images and let the AI organize and integrate them into the project.
+
+After a round of changes, ask the AI to Build the project and fix any errors, then open Preview and test the result. If the story, pacing, images, gameplay, or branching does not feel right, describe the problem and let the AI revise it.
+
+The core workflow is:
+
+```text
+Story / Text / Images / Structure
+              ↓
+             AI
+              ↓
+     Modify MiloTease project
+              ↓
+       Build / Validate
+              ↓
+           Preview
+              ↓
+        Give feedback
+              ↓
+        AI revises it
+```
+
+You can also ask the AI questions about the current project at any time, including its structure, story flow, node relationships, variables, Build errors, media references, or Preview behavior. The AI can inspect the project first and answer based on the actual files.
+
+For the best results, use a strong AI agent with local file access and command execution capabilities.
+
 ## Quick Start
 
 ### Requirements
