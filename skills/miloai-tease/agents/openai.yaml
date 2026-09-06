@@ -1,0 +1,7 @@
+interface:
+  display_name: "Vibe MiloTease Workflow"
+  short_description: "Design and build WebTeases with Outline and Milo IR"
+  default_prompt: "Use $miloai-tease to guide this WebTease through Outline and Milo IR, pausing for my confirmation before Milo IR. After Milo IR authoring or revision, compile and validate immediately with the build command instead of treating Build as a separate stage or approval gate. After a successful compilation, give me the Preview URL and remind me to inspect the tease there; Preview is not a workflow stage or approval gate."
+
+policy:
+  allow_implicit_invocation: true

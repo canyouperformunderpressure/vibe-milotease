@@ -1,0 +1,1 @@
+import{o as r,aT as o,j as a,N as n}from"./index-3db13f53.js";const i=()=>{const{pageId:s}=r(),e=o.find(t=>t.id===s);return e?a.jsx(e.Content,{}):a.jsx(n,{to:"/help",replace:!0})};export{i as default};

@@ -1,0 +1,75 @@
+{
+  "pages": {
+    "start": [
+      {
+        "goto": {
+          "target": "intro"
+        }
+      }
+    ],
+    "intro": [
+      {
+        "say": {
+          "label": "Welcome to the challenge."
+        }
+      },
+      {
+        "eval": {
+          "script": "__milo_state[\"score\"] += 1;"
+        }
+      },
+      {
+        "if": {
+          "condition": "(__milo_state[\"score\"] >= 1)",
+          "commands": [
+            {
+              "goto": {
+                "target": "done"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "if": {
+          "condition": "!((__milo_state[\"score\"] >= 1))",
+          "commands": [
+            {
+              "goto": {
+                "target": "retry"
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "retry": [
+      {
+        "say": {
+          "label": "Try again."
+        }
+      },
+      {
+        "goto": {
+          "target": "intro"
+        }
+      }
+    ],
+    "done": [
+      {
+        "say": {
+          "label": "Challenge complete.",
+          "align": "center"
+        }
+      },
+      {
+        "end": {}
+      }
+    ]
+  },
+  "files": {},
+  "galleries": {},
+  "modules": {},
+  "init": "var __milo_state={\"score\":0};",
+  "info": {}
+}

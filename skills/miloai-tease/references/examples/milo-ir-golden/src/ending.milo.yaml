@@ -1,0 +1,10 @@
+format: milo-ir
+scene: ending
+entry: done
+
+pages:
+  done:
+    - say:
+        label: Challenge complete.
+        align: center
+    - end: {}

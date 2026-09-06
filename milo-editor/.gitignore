@@ -1,0 +1,22 @@
+vendor/monaco/node_modules/
+test-artifacts/
+captures/test-upload.jpg
+__pycache__/
+.pytest_cache/
+.pytest-tmp-*/
+omp-runtime/node_modules/
+omp-runtime/home/
+logs/
+
+# Stale local Tease Graph template experiment; keep for manual cleanup
+tease-graph/react-app/src/outlineTemplates.js
+tease-graph/react-app/src/outlineTemplates.test.js
+
+# Tease Graph dependencies and intermediate build output
+tease-graph/node_modules/
+tease-graph/dist/*
+!tease-graph/dist/standalone.html
+
+# Obsolete pre-React Tease Graph prototype
+tease-graph/source/
+tease-graph/index.html

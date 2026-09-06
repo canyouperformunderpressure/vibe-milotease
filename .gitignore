@@ -1,0 +1,21 @@
+# Generated caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local deployment/browser state
+.milovana-deploy/
+.milovana-browser/
+browser-profile/
+
+# Local environment / credentials
+.env
+.env.*
+*.pem
+*.key
+*cookie*
+*credential*
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db

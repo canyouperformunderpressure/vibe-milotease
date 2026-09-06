@@ -1,0 +1,15 @@
+format: milo-ir
+scene: opening
+entry: intro
+
+pages:
+  intro:
+    - say: Welcome to the challenge.
+    - set: score += 1
+    - if:
+        score >= 1: $ending
+        else: retry
+
+  retry:
+    - say: Try again.
+    - goto: intro

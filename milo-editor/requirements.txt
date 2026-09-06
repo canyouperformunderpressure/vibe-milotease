@@ -1,0 +1,8 @@
+fastapi>=0.116,<1
+uvicorn[standard]>=0.35,<1
+graphql-core>=3.2,<4
+python-multipart>=0.0.20,<1
+Pillow>=11,<13
+PyYAML>=6.0,<7
+gallery-dl==1.32.9
+playwright>=1.50,<2

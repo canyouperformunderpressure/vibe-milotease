@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+
+# Local package-manager dependencies and caches used by skill tools.
+tools/*/node_modules/
+tools/*/.npm-cache/

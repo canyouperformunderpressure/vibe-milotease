@@ -1,0 +1,24 @@
+format: milo-outline
+title: Compiler Golden
+
+brief: |
+  A minimal, verifiable interactive flow: the player enters a challenge, updates state, and then finishes.
+  The example uses no media; if the score threshold is not met, it retries inside opening.
+
+entry: opening
+
+nodes:
+  opening:
+    name: Opening
+    content: |
+      Establish the rules and perform one state check.
+      Use a button to enter the challenge, then continue to ending after success.
+    next:
+      - to: ending
+        when: Score reaches 1
+        priority: main
+
+  ending:
+    name: Ending
+    content: End the work explicitly.
+    next: []

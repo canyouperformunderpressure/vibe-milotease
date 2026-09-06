@@ -1,0 +1,9 @@
+{
+  "name": "milo-rich-text-tools",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "chafa-wasm": "0.3.3",
+    "sharp": "^0.34.5"
+  }
+}

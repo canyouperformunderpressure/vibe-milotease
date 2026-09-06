@@ -1,0 +1,1 @@
+import{j as a,aq as e,aP as i,O as n,bP as d,f as l}from"./index-3db13f53.js";const c=({icon:r,title:s,onHelp:t,...o})=>a.jsx(e,{avatar:a.jsx(i,{children:r}),title:s,titleTypographyProps:{variant:"h5"},action:t?a.jsx(n,{onClick:t,size:"large",children:a.jsx(d,{})}):void 0,...o}),j=({children:r,...s})=>a.jsx(l,{...s,children:r});export{c as E,j as H};
