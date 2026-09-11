@@ -356,7 +356,10 @@ class MilovanaBrowserClient:
     def list_eos_teases(self) -> list[dict[str, str]]:
         data = self.graphql(TEASES_QUERY, {}, "Teases", patient=False)
         me = data.get("me") if isinstance(data, dict) else None
-        teases = me.get("allTeases") if isinstance(me, dict) else None
+        authenticated = isinstance(me, dict) and str(me.get("id") or "").isdigit() and int(me["id"]) > 1
+        if not authenticated:
+            raise MilovanaBrowserError("Sign in to Milovana in the opened Chrome window.")
+        teases = me.get("allTeases")
         result: list[dict[str, str]] = []
         for tease in teases or []:
             if not isinstance(tease, dict) or tease.get("__typename") != "EosTease":

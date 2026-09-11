@@ -28,7 +28,6 @@
 
   async function loadExistingTeases() {
     var elements = deployElements();
-    if (elements.targetSelect) elements.targetSelect.dataset.loaded = "0";
     if (!elements.targetSelect) return;
     if (elements.targetSelect.dataset.loaded === "1") return;
     var previous = (elements.target.value || localStorage.getItem(deployStorageKey(projectId())) || "").trim();

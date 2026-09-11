@@ -345,7 +345,6 @@ async def milovana_teases(request: Request) -> dict[str, Any]:
     def load() -> dict[str, Any]:
         client = MilovanaBrowserClient()
         try:
-            client.require_authenticated()
             return {"teases": client.list_eos_teases()}
         finally:
             client.close()
