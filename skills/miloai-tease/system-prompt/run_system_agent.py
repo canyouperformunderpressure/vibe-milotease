@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-"""Launch one supported agent with the Milo NSFW module in its API prompt.
+"""Launch a supported agent with an explicitly user-supplied system prompt.
 
-The installer in ``init_system_prompt.py`` keeps project-context files
-available for normal sessions.  This launcher is the separate, explicit path
-for a new process whose model request receives the canonical module through
-the agent's supported system/instructions mechanism.
+This project does not bundle a default or jailbreak prompt. The caller must
+provide a non-empty UTF-8 text file explicitly with ``--source``.
 """
 
 from __future__ import annotations
@@ -19,7 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping, Sequence
 
-from init_system_prompt import DEFAULT_REPO_ROOT, SOURCE_FILE, normalize_agent
+from init_system_prompt import DEFAULT_REPO_ROOT, normalize_agent
 
 
 AGENT_COMMANDS = {
@@ -77,8 +75,6 @@ def _has_codex_developer_override(arguments: Sequence[str]) -> bool:
 def _toml_basic_string(value: str) -> str:
     """Encode a string as a TOML basic string for Codex ``-c``."""
 
-    # JSON's quoted-string escapes are a valid subset of TOML basic-string
-    # escapes and avoid shell-dependent quoting for newlines and backslashes.
     return json.dumps(value, ensure_ascii=False)
 
 
@@ -96,10 +92,6 @@ def _default_command_prefix(agent: str) -> tuple[str, ...]:
 
     executable = _default_executable(agent)
     if agent == "codex" and os.name == "nt" and executable.lower().endswith(".cmd"):
-        # Passing a long prompt containing HTML/XML characters through a .cmd
-        # shim lets cmd.exe reinterpret redirection characters.  Invoke the
-        # npm entry point through node instead, so the prompt stays one argv
-        # value and never passes through cmd parsing.
         shim = Path(executable)
         script = shim.parent / "node_modules" / "@openai" / "codex" / "bin" / "codex.js"
         node = shutil.which("node")
@@ -140,20 +132,27 @@ def _opencode_environment(
     return environment
 
 
+def _read_prompt(source_file: Path) -> tuple[Path, str]:
+    source = source_file.resolve()
+    if not source.is_file():
+        raise FileNotFoundError(f"system prompt source not found: {source}")
+    prompt = source.read_text(encoding="utf-8")
+    if not prompt.strip():
+        raise ValueError(f"system prompt source is empty: {source}")
+    return source, prompt
+
+
 def build_launch_plan(
     agent: str,
-    source_file: Path = SOURCE_FILE,
+    source_file: Path,
     forwarded: Sequence[str] = (),
     executable: str | None = None,
     base_environment: Mapping[str, str] | None = None,
 ) -> LaunchPlan:
-    """Build an API-prompt-aware launch plan for one supported agent."""
+    """Build a launch plan using only the explicitly supplied prompt file."""
 
     canonical = normalize_agent(agent)
-    source = source_file.resolve()
-    if not source.is_file():
-        raise FileNotFoundError(f"system prompt source not found: {source}")
-
+    source, prompt = _read_prompt(source_file)
     arguments = tuple(forwarded)
     environment = dict(os.environ if base_environment is None else base_environment)
     command_prefix = (executable,) if executable else _default_command_prefix(canonical)
@@ -167,7 +166,6 @@ def build_launch_plan(
     if canonical == "codex":
         if _has_codex_developer_override(arguments):
             raise ValueError("Codex developer_instructions is managed by the launcher; remove the forwarded override")
-        prompt = source.read_text(encoding="utf-8")
         override = f"developer_instructions={_toml_basic_string(prompt)}"
         command = (*command_prefix, "-c", override, *arguments)
         return LaunchPlan(canonical, "developer", command, environment, source)
@@ -179,7 +177,6 @@ def build_launch_plan(
 
     if _has_prompt_flag(arguments, PI_PROMPT_FLAGS):
         raise ValueError("Pi prompt flags are managed by the launcher; remove the forwarded prompt flag")
-    prompt = source.read_text(encoding="utf-8")
     command = (*command_prefix, "--append-system-prompt", prompt, *arguments)
     return LaunchPlan(canonical, "system", command, environment, source)
 
@@ -202,16 +199,27 @@ def _display_plan(plan: LaunchPlan) -> None:
     elif plan.agent == "codex":
         command = list(plan.command)
         config_index = command.index("-c")
-        command[config_index + 1] = "developer_instructions=<canonical source contents>"
+        command[config_index + 1] = "developer_instructions=<user-supplied source contents>"
+        payload["command"] = command
+    elif plan.agent == "pi":
+        command = list(plan.command)
+        prompt_index = command.index("--append-system-prompt")
+        command[prompt_index + 1] = "<user-supplied source contents>"
         payload["command"] = command
     print(json.dumps(payload, ensure_ascii=False, indent=2))
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Launch Claude, Codex, OpenCode, or Pi with APPEND_SYSTEM_EN.md in the API prompt."
+        description="Launch Claude, Codex, OpenCode, or Pi with a user-supplied system prompt."
     )
     parser.add_argument("--agent", required=True, help="claude, codex, opencode, or pi")
+    parser.add_argument(
+        "--source",
+        type=Path,
+        required=True,
+        help="path to a non-empty UTF-8 prompt file supplied by the user",
+    )
     parser.add_argument(
         "--repo-root",
         type=Path,
@@ -230,6 +238,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         plan = build_launch_plan(
             args.agent,
+            source_file=args.source,
             forwarded=forwarded,
             executable=args.executable,
         )

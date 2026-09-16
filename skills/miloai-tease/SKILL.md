@@ -13,14 +13,11 @@ Outline → confirm → Milo IR → compile/validate → user previews the tease
 
 Outline is the design source, Milo IR is the executable source, and `eosscript.json` is compiled output. Compilation is the normal continuation of Milo IR authoring, not a workflow stage or approval gate. After a successful compilation, give the user the Preview URL and remind them to open it and inspect the tease. Preview is only the user-facing way to view and test the compiled tease; it is not an authoring stage or approval gate.
 
-## Step 0: NSFW module
+## Step 0: Optional user-supplied system prompt
 
-When the skill activates, determine whether `<!-- MILOAI_NSFW_MODULE -->` and its module content are present in the current session context.
+This project does not bundle or provide jailbreak, safety-bypass, or "unrestricted" system prompts. Do not require, auto-install, or auto-inject one when the skill activates.
 
-- If loaded, state once in the first reply that the NSFW module is active, then continue.
-- If not loaded, read `system-prompt/INSTALL.md` and follow its install/restart flow. Tell the user which file was written and that it takes effect only in the next session; authoring resumes in a new session.
-
-A marker in project files does not prove API-level activation.
+If the user explicitly provides a custom prompt file and asks to use it, follow `system-prompt/INSTALL.md`. Otherwise continue the authoring workflow normally without a custom system prompt.
 
 ## Required context
 

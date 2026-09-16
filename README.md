@@ -257,9 +257,11 @@ Outline → explicit confirmation → Milo IR → compile / validate → Preview
 
 The agent should treat `outline.yaml` and Milo source files as the source of truth and should not directly edit generated `eosscript.json` in a Milo IR project.
 
-### Supported agent bootstrap targets
+### Optional user-supplied system prompts
 
-The included system-prompt bootstrap supports these agent IDs:
+This project does **not** ship or provide jailbreak, safety-bypass, "unrestricted", or similar system prompts. If you want a custom prompt, create and maintain it yourself and pass its path explicitly with `--source`.
+
+The helper supports these agent IDs:
 
 | Agent ID | Project-scoped target |
 | --- | --- |
@@ -268,29 +270,25 @@ The included system-prompt bootstrap supports these agent IDs:
 | `opencode` | `AGENTS.md` |
 | `pi` | `.pi/APPEND_SYSTEM.md` |
 
-Install the project-scoped instructions with:
+Install your own prompt into project-scoped instructions:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File skills/miloai-tease/system-prompt/init-system-prompt.ps1 --agent codex
+powershell -ExecutionPolicy Bypass -File skills/miloai-tease/system-prompt/init-system-prompt.ps1 --agent codex --source "D:\path\to\my-prompt.md"
 ```
-
-Replace `codex` with `claude`, `opencode`, or `pi` as appropriate.
-
-The installer is append-only, stays under the repository root, and uses a marker to avoid duplicating the module. A newly installed instruction/module is loaded by a **new agent session**, not retroactively into a session that is already running.
 
 Bash is also available:
 
 ```bash
-bash skills/miloai-tease/system-prompt/init-system-prompt.sh --agent codex
+bash skills/miloai-tease/system-prompt/init-system-prompt.sh --agent codex --source /path/to/my-prompt.md
 ```
 
-For a new process that needs the agent-specific API/system-instruction mechanism, use the launcher:
+To launch a new process with the same user-supplied prompt:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File skills/miloai-tease/system-prompt/run-system-agent.ps1 --agent codex -- <agent arguments>
+powershell -ExecutionPolicy Bypass -File skills/miloai-tease/system-prompt/run-system-agent.ps1 --agent codex --source "D:\path\to\my-prompt.md" -- <agent arguments>
 ```
 
-See `skills/miloai-tease/system-prompt/INSTALL.md` for the exact behavior of each supported agent.
+Replace `codex` with `claude`, `opencode`, or `pi` as appropriate. See `skills/miloai-tease/system-prompt/INSTALL.md` for details.
 
 ### Typical agent workflow
 
@@ -330,7 +328,7 @@ milovana/
       ├─ SKILL.md          # agent workflow and operational contract
       ├─ agents/           # agent metadata
       ├─ references/       # authoring, implementation, gameplay and media docs
-      ├─ system-prompt/    # project-scoped agent bootstrap/launcher
+      ├─ system-prompt/    # helpers for explicitly user-supplied prompts
       └─ tools/            # workflow and media utilities
 ```
 
@@ -402,6 +400,12 @@ Start with:
 - `skills/miloai-tease/references/implementation.md` — Milo IR and compiler semantics.
 - `skills/miloai-tease/references/media.md` — media workflow.
 - `milo-editor/README.md` — editor, build, migration, and deployment details.
+
+## Legal and Responsibility Notice
+
+Users must ensure that their use of this project complies with the laws and regulations applicable in their jurisdiction and actual use context, as well as applicable platform rules and third-party terms. Users assume all risks, responsibilities, and consequences arising from use of the project, including user-supplied prompts, generated content, publication activity, account actions, and third-party materials.
+
+The project authors and contributors do not participate in or control users' specific use of the project, and making the project available does not constitute endorsement, authorization, or warranty of any user conduct, prompt, content, or purpose. The project authors and contributors assume no responsibility or liability for any loss, claim, penalty, dispute, legal liability, or other direct or indirect consequence arising from use of the project.
 
 ## License
 

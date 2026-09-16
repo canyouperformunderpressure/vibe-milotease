@@ -257,9 +257,11 @@ Outline → explicit confirmation → Milo IR → compile / validate → Preview
 
 Agent 应该把 `outline.yaml` 和 Milo 源文件作为事实来源，在 Milo IR 项目中不应该直接编辑生成的 `eosscript.json`。
 
-### 支持的 Agent 初始化目标
+### 可选的用户自备 System Prompt
 
-内置 system-prompt bootstrap 支持以下 Agent ID：
+本项目**不提供任何破限、越狱、安全绕过或所谓“无限制”提示词**。如需使用自定义 System Prompt，请自行编写和维护，并通过 `--source` 显式传入文件路径。
+
+辅助工具支持以下 Agent ID：
 
 | Agent ID | 项目级目标文件 |
 | --- | --- |
@@ -268,29 +270,25 @@ Agent 应该把 `outline.yaml` 和 Milo 源文件作为事实来源，在 Milo I
 | `opencode` | `AGENTS.md` |
 | `pi` | `.pi/APPEND_SYSTEM.md` |
 
-安装项目级指令：
+把你自己的提示词安装到项目级指令：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File skills/miloai-tease/system-prompt/init-system-prompt.ps1 --agent codex
+powershell -ExecutionPolicy Bypass -File skills/miloai-tease/system-prompt/init-system-prompt.ps1 --agent codex --source "D:\path\to\my-prompt.md"
 ```
-
-根据需要将 `codex` 替换为 `claude`、`opencode` 或 `pi`。
-
-安装器只追加内容、不会越出仓库根目录，并使用标记避免重复写入模块。新安装的指令/模块会由**新的 Agent 会话**加载，不会逆向注入已经运行中的会话。
 
 也提供 Bash 版本：
 
 ```bash
-bash skills/miloai-tease/system-prompt/init-system-prompt.sh --agent codex
+bash skills/miloai-tease/system-prompt/init-system-prompt.sh --agent codex --source /path/to/my-prompt.md
 ```
 
-如果新进程需要使用 Agent 对应的 API/system-instruction 机制，可以使用 launcher：
+如果要让新进程显式加载同一个用户自备提示词：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File skills/miloai-tease/system-prompt/run-system-agent.ps1 --agent codex -- <agent arguments>
+powershell -ExecutionPolicy Bypass -File skills/miloai-tease/system-prompt/run-system-agent.ps1 --agent codex --source "D:\path\to\my-prompt.md" -- <agent arguments>
 ```
 
-每种支持 Agent 的具体行为请参见 `skills/miloai-tease/system-prompt/INSTALL.md`。
+根据需要将 `codex` 替换为 `claude`、`opencode` 或 `pi`。具体行为参见 `skills/miloai-tease/system-prompt/INSTALL.md`。
 
 ### 典型 Agent 工作流
 
@@ -331,7 +329,7 @@ milovana/
       ├─ SKILL.md          # Agent 工作流与操作约定
       ├─ agents/           # Agent 元数据
       ├─ references/       # 创作、实现、玩法和媒体文档
-      ├─ system-prompt/    # 项目级 Agent bootstrap/launcher
+      ├─ system-prompt/    # 用户显式提供提示词时使用的辅助工具
       └─ tools/            # 工作流和媒体工具
 ```
 
@@ -403,6 +401,12 @@ Vibe MiloTease 仍在持续演进，目前还有不少粗糙之处。下面明�
 - `skills/miloai-tease/references/implementation.md` — Milo IR 与编译器语义。
 - `skills/miloai-tease/references/media.md` — 媒体工作流。
 - `milo-editor/README.md` — Editor、build、迁移与部署细节。
+
+## 合规与责任声明
+
+使用本项目时，用户应自行确保其使用行为符合所在地及实际使用场景所适用的法律法规、平台规则及第三方条款，并自行承担因使用本项目、用户自行添加的提示词、生成内容、发布行为、账号操作及第三方素材所产生的一切风险、责任和后果。
+
+本项目作者及贡献者不参与、不控制用户的具体使用行为；本项目的提供亦不构成对任何用户行为、提示词、内容或用途的认可、授权或保证。本项目作者及贡献者不对因使用本项目而产生的任何损失、索赔、处罚、争议、法律责任或其他直接或间接后果承担责任。
 
 ## License
 

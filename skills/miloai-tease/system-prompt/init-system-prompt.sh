@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# MiloAI NSFW module installer — Bash entry point.
-# Detection and installation live in init_system_prompt.py so this entry point
-# and the PowerShell entry point have identical behavior.
+# User-supplied system prompt installer — Bash entry point.
+# This project does not bundle a default prompt; all arguments are forwarded
+# to init_system_prompt.py, including the required --source file.
 
 set -euo pipefail
 

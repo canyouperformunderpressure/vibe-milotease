@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
-"""Install the MiloAI NSFW module for one supported coding agent.
+"""Install a user-supplied system prompt for one supported coding agent.
 
-This file is the single source of truth for detection, target mapping, and
-append-only installation.  The PowerShell and Bash files beside it are thin
-wrappers so the two entry points cannot drift apart.
-
-Installation is project-scoped and affects the next session.  Existing target
-content is preserved byte-for-byte; the module is appended only when its
-marker is not already present.
+This project does not bundle a default or jailbreak prompt. The caller must
+provide a non-empty UTF-8 text file explicitly with ``--source``.
 """
 
 from __future__ import annotations
@@ -19,17 +14,11 @@ import sys
 from pathlib import Path
 
 
-MARKER = "<!-- MILOAI_NSFW_MODULE -->"
-MARKER_BYTES = MARKER.encode("utf-8")
 SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_REPO_ROOT = SCRIPT_DIR.parents[2]
-SOURCE_FILE = SCRIPT_DIR / "APPEND_SYSTEM_EN.md"
 LAUNCHER_PS1 = SCRIPT_DIR / "run-system-agent.ps1"
 LAUNCHER_SH = SCRIPT_DIR / "run-system-agent.sh"
 
-# Keep this list intentionally small: these are the four agents this project
-# promises to configure.  Codex and OpenCode both consume a project AGENTS.md;
-# Pi consumes project-local .pi/APPEND_SYSTEM.md for prompt append content.
 TARGETS = {
     "claude": Path("CLAUDE.md"),
     "codex": Path("AGENTS.md"),
@@ -42,8 +31,6 @@ ALIASES = {
     "openai-codex": "codex",
 }
 
-# Explicit --agent is preferred.  These signals are only a best-effort
-# fallback for a manual invocation and may be absent or stale.
 ENV_SIGNALS = (
     ("claude", ("CLAUDECODE", "CLAUDE_CODE", "CLAUDE_CODE_ENTRYPOINT")),
     ("opencode", ("OPENCODE", "OPENCODE_SESSION")),
@@ -100,13 +87,7 @@ def running_process_names() -> set[str]:
 
 
 def detect_agent() -> str | None:
-    """Detect one of the four supported agents, or return None.
-
-    Repository marker files are deliberately not used: a stale CLAUDE.md,
-    AGENTS.md, or .pi directory is common and cannot identify the currently
-    running process.  The skill therefore passes --agent explicitly; this
-    fallback is only a convenience for a manual run.
-    """
+    """Detect one supported agent, or return None."""
 
     for agent, names in ENV_SIGNALS:
         if any(os.environ.get(name) for name in names):
@@ -119,30 +100,44 @@ def detect_agent() -> str | None:
     return None
 
 
+def _read_source(source_file: Path) -> bytes:
+    source = source_file.resolve()
+    if not source.is_file():
+        raise FileNotFoundError(f"prompt source not found: {source}")
+    text = source.read_text(encoding="utf-8")
+    if not text.strip():
+        raise ValueError(f"prompt source is empty: {source}")
+    return text.encode("utf-8")
+
+
 def _read_existing(target: Path) -> bytes | None:
     if not target.is_file():
         return None
     return target.read_bytes()
 
 
-def _print_api_launcher_hint(agent: str, repo_root: Path) -> None:
-    """Explain how to start the next process with an API-level prompt append."""
+def _print_api_launcher_hint(agent: str, repo_root: Path, source_file: Path) -> None:
+    """Explain how to start a new process with the same user prompt."""
 
     resolved_repo = repo_root.resolve()
+    resolved_source = source_file.resolve()
     repo_argument = ""
     if resolved_repo != DEFAULT_REPO_ROOT.resolve():
-        repo_argument = f" --repo-root {resolved_repo}"
+        repo_argument = f' --repo-root "{resolved_repo}"'
     print("Project-file installation does not retroactively change the current session.")
-    print("For API-level system/instructions injection in the NEXT process, launch:")
+    print("To pass the same user-supplied prompt to a NEW process, launch:")
     print(
         f"  powershell -ExecutionPolicy Bypass -File {LAUNCHER_PS1}"
-        f" --agent {agent}{repo_argument} --"
+        f' --agent {agent} --source "{resolved_source}"{repo_argument} --'
     )
-    print(f"  bash {LAUNCHER_SH} --agent {agent}{repo_argument} --")
+    print(
+        f"  bash {LAUNCHER_SH} --agent {agent}"
+        f' --source "{resolved_source}"{repo_argument} --'
+    )
 
 
-def install(repo_root: Path, agent: str, dry_run: bool = False) -> int:
-    """Append the module to the selected target without overwriting content."""
+def install(repo_root: Path, agent: str, source_file: Path, dry_run: bool = False) -> int:
+    """Append a user-supplied prompt without overwriting existing content."""
 
     target = (repo_root / TARGETS[agent]).resolve()
     try:
@@ -150,44 +145,48 @@ def install(repo_root: Path, agent: str, dry_run: bool = False) -> int:
     except ValueError as exc:
         raise ValueError(f"target escapes repository root: {target}") from exc
 
-    source = SOURCE_FILE.read_bytes()
+    source = _read_source(source_file)
     existing = _read_existing(target)
 
-    if existing is not None and MARKER_BYTES in existing:
-        print(f"Already installed: {target}")
-        print("If the module is not in the current session context, start a new session.")
-        _print_api_launcher_hint(agent, repo_root)
+    if existing is not None and source in existing:
+        print(f"Already present: {target}")
+        _print_api_launcher_hint(agent, repo_root, source_file)
         return 0
 
     if dry_run:
         mode = "append to existing" if existing is not None else "create"
         print(f"[dry-run] Agent: {agent} -> {target}")
+        print(f"[dry-run] Source: {source_file.resolve()}")
         print(f"[dry-run] Would {mode}: {target}")
         return 0
 
     if existing is None:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(source)
-        print(f"Installed (created): {target}")
+        print(f"Installed user prompt (created): {target}")
     else:
-        # Preserve all existing bytes, including their encoding and line
-        # endings.  Add one visual separator before the UTF-8 module.
         separator = b"\n---\n\n" if existing.endswith((b"\n", b"\r")) else b"\n\n---\n\n"
         target.write_bytes(existing + separator + source)
-        print(f"Installed (appended): {target}")
+        print(f"Installed user prompt (appended): {target}")
 
-    print("Installed for the NEXT session; start a new session to activate the module.")
-    _print_api_launcher_hint(agent, repo_root)
+    print("Start a new session for project-file instructions to take effect.")
+    _print_api_launcher_hint(agent, repo_root, source_file)
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Install the MiloAI NSFW module for Claude, Codex, OpenCode, or Pi."
+        description="Install a user-supplied system prompt for Claude, Codex, OpenCode, or Pi."
     )
     parser.add_argument(
         "--agent",
         help="running agent: claude, codex, opencode, or pi (aliases accepted)",
+    )
+    parser.add_argument(
+        "--source",
+        type=Path,
+        required=True,
+        help="path to a non-empty UTF-8 prompt file supplied by the user",
     )
     parser.add_argument(
         "--repo-root",
@@ -202,10 +201,6 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    if not SOURCE_FILE.is_file():
-        print(f"ERROR: Source file not found: {SOURCE_FILE}", file=sys.stderr)
-        return 1
-
     try:
         agent = normalize_agent(args.agent) if args.agent else detect_agent()
         if agent is None:
@@ -218,8 +213,8 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         repo_root = args.repo_root.resolve()
         print(f"Agent: {agent} -> {repo_root / TARGETS[agent]}")
-        return install(repo_root, agent, args.dry_run)
-    except (OSError, UnicodeError, ValueError) as exc:
+        return install(repo_root, agent, args.source, args.dry_run)
+    except (FileNotFoundError, OSError, UnicodeError, ValueError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
 

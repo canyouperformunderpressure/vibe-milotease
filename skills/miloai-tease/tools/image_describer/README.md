@@ -4,12 +4,12 @@
 
 Each request uses this context order:
 
-1. System prompt from `skills/miloai-tease/system-prompt/APPEND_SYSTEM_EN.md`
+1. Optional user-supplied system prompt, only when `--system-prompt <file>` is provided
 2. Bootstrap user message requesting a detailed image description
 3. Bootstrap assistant acknowledgement
 4. The image-description task followed by exactly one image
 
-By default the tool uses Cherry Studio's Anthropic-compatible `/v1/messages` endpoint and model `new-api:gemini-3.1-pro-preview`.
+This project does not bundle or provide jailbreak/safety-bypass prompts. By default, the image describer sends no system prompt. The tool uses Cherry Studio's Anthropic-compatible `/v1/messages` endpoint and model `new-api:gemini-3.1-pro-preview`.
 
 ## Requirements
 
@@ -63,6 +63,12 @@ python skills/miloai-tease/tools/image_describer/describe_images.py "D:\path\to\
 ```
 
 You can also use `--task-file D:\path\to\task.txt` to load the task from a UTF-8 text file.
+
+To use your own system prompt, provide it explicitly:
+
+```powershell
+python skills/miloai-tease/tools/image_describer/describe_images.py "D:\path\to\images" --system-prompt "D:\path\to\my-prompt.md"
+```
 
 ## Output and repeat runs
 

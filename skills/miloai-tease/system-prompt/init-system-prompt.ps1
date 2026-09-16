@@ -1,6 +1,6 @@
-# MiloAI NSFW module installer — PowerShell entry point.
-# Detection and installation live in init_system_prompt.py so this entry point
-# and the Bash entry point have identical behavior.
+# User-supplied system prompt installer — PowerShell entry point.
+# This project does not bundle a default prompt; all arguments are forwarded
+# to init_system_prompt.py, including the required --source file.
 
 $ErrorActionPreference = 'Stop'
 

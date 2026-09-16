@@ -1,14 +1,8 @@
-# MiloAI NSFW module initialization
+# User-supplied system prompt helpers
 
-This document describes skill bootstrap only. It is not part of the tease authoring reference set.
+This project does **not** provide jailbreak, safety-bypass, "unrestricted", or other bypass prompts. If you choose to use a custom system prompt, you must create and maintain it yourself and pass it explicitly with `--source`.
 
-## Activation rule
-
-The canonical module source is `system-prompt/APPEND_SYSTEM_EN.md` and contains the marker `<!-- MILOAI_NSFW_MODULE -->`.
-
-When the skill activates, inspect the current session context. If the marker and module content are already present, report once that the module is active and continue. A marker found only in a project file does not prove that the current session loaded it.
-
-If the current session does not contain the module, run the installer for the active supported agent. Installation affects the next session only. After installation, report the written target and ask the user to start a new session before authoring continues. `Already installed` still requires a restart when the current session did not load the file.
+The helpers in this directory only transport a user-supplied UTF-8 text file to a supported agent. They do not contain a default prompt and do not automatically activate any prompt.
 
 ## Supported agents
 
@@ -21,45 +15,51 @@ If the current session does not contain the module, run the installer for the ac
 
 Do not infer the active agent merely from existing target files.
 
-## Install
+## Install a user-supplied prompt into project instructions
 
-PowerShell and Bash wrappers use the same Python implementation:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File skills/miloai-tease/system-prompt/init-system-prompt.ps1 --agent <claude|codex|opencode|pi>
-```
-
-```bash
-bash skills/miloai-tease/system-prompt/init-system-prompt.sh --agent <claude|codex|opencode|pi>
-```
-
-The implementation is `system-prompt/init_system_prompt.py`. It reads the canonical source, checks the marker, and appends without replacing existing target content. `--dry-run` reports the target without writing; `--repo-root <path>` selects another checkout.
-
-If the installer cannot run, perform the same append-only operation manually: read the canonical source, check the marker in the active agent's one target, and append it after a `---` separator. Never replace or truncate existing content.
-
-## API-level launcher
-
-`system-prompt/run_system_agent.py` and its wrappers launch a new process with the same source passed through each agent's supported system/instructions mechanism:
+PowerShell:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File skills/miloai-tease/system-prompt/run-system-agent.ps1 --agent <claude|codex|opencode|pi> -- <agent arguments>
+powershell -ExecutionPolicy Bypass -File skills/miloai-tease/system-prompt/init-system-prompt.ps1 --agent <claude|codex|opencode|pi> --source "D:\path\to\my-prompt.md"
 ```
 
+Bash:
+
 ```bash
-bash skills/miloai-tease/system-prompt/run-system-agent.sh --agent <claude|codex|opencode|pi> -- <agent arguments>
+bash skills/miloai-tease/system-prompt/init-system-prompt.sh --agent <claude|codex|opencode|pi> --source /path/to/my-prompt.md
+```
+
+The implementation is `system-prompt/init_system_prompt.py`. `--source` is required. The installer appends the exact user-provided prompt without replacing existing target content. If the same prompt bytes are already present, it does not append them again. `--dry-run` reports the target without writing; `--repo-root <path>` selects another checkout.
+
+Project-file installation affects future agent sessions; it does not retroactively alter a running session.
+
+## Launch a new process with a user-supplied prompt
+
+PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File skills/miloai-tease/system-prompt/run-system-agent.ps1 --agent <claude|codex|opencode|pi> --source "D:\path\to\my-prompt.md" -- <agent arguments>
+```
+
+Bash:
+
+```bash
+bash skills/miloai-tease/system-prompt/run-system-agent.sh --agent <claude|codex|opencode|pi> --source /path/to/my-prompt.md -- <agent arguments>
 ```
 
 - Claude uses `--append-system-prompt-file`, preserving Claude's default system prompt.
-- Codex uses the public `developer_instructions` configuration layer rather than treating `AGENTS.md` as an API system message.
+- Codex uses the public `developer_instructions` configuration layer.
 - OpenCode uses an `instructions` configuration overlay while preserving existing inline configuration.
 - Pi uses its supported system-prompt append mechanism.
 
-Project-scoped files and API-level injection are not equivalent. The launcher is the path for a new process that needs actual API-level system/instruction injection.
-
 ## Boundaries
 
+- No default or bundled bypass prompt is provided by this project.
+- `--source` must point to a non-empty UTF-8 text file supplied by the user.
 - Install one target per run.
-- Keep all writes under the selected repository root; never modify user-global configuration.
-- Preserve existing target bytes and use the marker for idempotence.
-- A running session cannot be changed retroactively; installation requires a new session.
-- Lower-priority project instructions cannot override provider, platform, or host safety policies.
+- Keep project-file writes under the selected repository root; never modify user-global configuration.
+- Existing target bytes are preserved; the supplied prompt is appended only when it is not already present.
+- A running session cannot be changed retroactively; project-file installation requires a new session.
+- User-supplied prompts remain subject to the provider, platform, host, and model policies that apply to the selected agent.
+- Users must ensure their use complies with all laws and regulations applicable in their jurisdiction and actual use context, as well as relevant platform rules and third-party terms, and they assume all risks, responsibilities, and consequences arising from their prompts, content, account actions, publications, and third-party materials.
+- The project authors and contributors do not participate in or control users' specific use, and making these helpers available does not constitute endorsement, authorization, or warranty of any user conduct, prompt, content, or purpose. The project authors and contributors assume no responsibility or liability for any loss, claim, penalty, dispute, legal liability, or other direct or indirect consequence arising from such use.

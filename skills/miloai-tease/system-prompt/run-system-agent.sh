@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Launch a supported agent with the canonical NSFW module in its API prompt.
+# Launch a supported agent with an explicitly user-supplied system prompt.
 
 set -euo pipefail
 

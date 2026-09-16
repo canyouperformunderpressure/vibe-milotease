@@ -23,7 +23,6 @@ DEFAULT_BASE_URL = "http://127.0.0.1:23333"
 DEFAULT_MODEL = "new-api:gemini-3.1-pro-preview"
 BOOTSTRAP_USER = "Please describe the image in detail and directly, based only on what is visible."
 BOOTSTRAP_ASSISTANT = "Ready. Send the image and I will provide a detailed visual description."
-DEFAULT_SYSTEM_PROMPT = Path(__file__).resolve().parents[2] / "system-prompt" / "APPEND_SYSTEM_EN.md"
 DEFAULT_TASK = (
     "Describe the current image in detailed, objective visual terms. Cover the number of people and visible "
     "features, environment, composition, lighting, clothing, accessories, expressions, gaze, posture, actions, "
@@ -85,8 +84,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Environment variable containing the Bearer key (default: CHERRY_API_KEY)",
     )
     parser.add_argument(
-        "--system-prompt", type=Path, default=DEFAULT_SYSTEM_PROMPT,
-        help="System prompt file",
+        "--system-prompt", type=Path,
+        help="Optional user-supplied system prompt file; no system prompt is bundled by this project",
     )
     task_group = parser.add_mutually_exclusive_group()
     task_group.add_argument("--task", default=DEFAULT_TASK, help="Image-description task text")
@@ -149,13 +148,11 @@ def image_block(path: Path) -> dict[str, Any]:
 
 
 def build_payload(
-    *, system_prompt: str, task: str, image: dict[str, Any], model: str,
+    *, system_prompt: str | None, task: str, image: dict[str, Any], model: str,
     max_tokens: int, temperature: float,
 ) -> dict[str, Any]:
-    # Context: system -> bootstrap user -> bootstrap assistant -> task text -> one image.
-    return {
+    payload: dict[str, Any] = {
         "model": model,
-        "system": system_prompt,
         "messages": [
             {"role": "user", "content": BOOTSTRAP_USER},
             {"role": "assistant", "content": BOOTSTRAP_ASSISTANT},
@@ -171,6 +168,9 @@ def build_payload(
         "max_tokens": max_tokens,
         "stream": False,
     }
+    if system_prompt is not None:
+        payload["system"] = system_prompt
+    return payload
 
 
 def response_text(response: dict[str, Any]) -> str:
@@ -256,7 +256,10 @@ def atomic_write_text(path: Path, text: str) -> None:
 def run(args: argparse.Namespace) -> int:
     input_dir = args.input_dir.resolve()
     output_dir = (args.output_dir or (input_dir / "descriptions")).resolve()
-    system_prompt = read_nonempty_text(args.system_prompt.resolve(), "system prompt")
+    system_prompt = (
+        read_nonempty_text(args.system_prompt.resolve(), "system prompt")
+        if args.system_prompt else None
+    )
     task = read_nonempty_text(args.task_file.resolve(), "task prompt") if args.task_file else args.task.strip()
     if not task:
         raise ValueError("The description task cannot be empty")
@@ -296,7 +299,7 @@ def run(args: argparse.Namespace) -> int:
             "input_dir": str(input_dir),
             "output_dir": str(output_dir),
             "model": args.model,
-            "system_prompt": str(args.system_prompt.resolve()),
+            "system_prompt": str(args.system_prompt.resolve()) if args.system_prompt else None,
             "concurrency": args.concurrency,
             "requests_per_minute": args.requests_per_minute,
             "count": len(plans),
@@ -370,7 +373,7 @@ def run(args: argparse.Namespace) -> int:
         "model": args.model,
         "concurrency": args.concurrency,
         "requests_per_minute": args.requests_per_minute,
-        "system_prompt": str(args.system_prompt.resolve()),
+        "system_prompt": str(args.system_prompt.resolve()) if args.system_prompt else None,
         "task": task,
         "counts": {"discovered": len(images), **counts},
         "results": [asdict(result) for result in results],
